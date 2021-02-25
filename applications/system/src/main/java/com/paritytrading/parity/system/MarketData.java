@@ -21,6 +21,7 @@ import com.paritytrading.nassau.moldudp64.MoldUDP64DefaultMessageStore;
 import com.paritytrading.nassau.moldudp64.MoldUDP64DownstreamPacket;
 import com.paritytrading.nassau.moldudp64.MoldUDP64RequestServer;
 import com.paritytrading.nassau.moldudp64.MoldUDP64Server;
+import com.paritytrading.parity.net.itch.ITCH50;
 import com.paritytrading.parity.net.pmd.PMD;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -30,7 +31,7 @@ import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
-class MarketData {
+public class MarketData {
 
     private final PMD.Version       version;
     private final PMD.OrderAdded    orderAdded;
@@ -138,6 +139,26 @@ class MarketData {
     }
 
     private void send(PMD.Message message) {
+        buffer.clear();
+        message.put(buffer);
+        buffer.flip();
+
+        try {
+            packet.put(buffer);
+
+            transport.send(packet);
+
+            packet.payload().flip();
+
+            messages.put(packet);
+
+            packet.clear();
+        } catch (IOException e) {
+            fatal(e);
+        }
+    }
+
+    public void send(ITCH50.Message message) {
         buffer.clear();
         message.put(buffer);
         buffer.flip();

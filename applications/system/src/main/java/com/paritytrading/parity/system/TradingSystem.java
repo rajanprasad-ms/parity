@@ -29,7 +29,7 @@ import java.time.ZoneId;
 import java.util.List;
 import org.jvirtanen.config.Configs;
 
-class TradingSystem {
+public class TradingSystem {
 
     static final long EPOCH_MILLIS = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
         .toInstant().toEpochMilli();
@@ -45,7 +45,7 @@ class TradingSystem {
         }
     }
 
-    private static void main(Config config) throws IOException {
+    public static void main(Config config) throws IOException {
         MarketData marketData = marketData(config);
 
         MarketReporting marketReporting = marketReporting(config);
@@ -62,7 +62,7 @@ class TradingSystem {
         new Events(marketData, marketReporting, orderEntry).run();
     }
 
-    private static MarketData marketData(Config config) throws IOException {
+    public static MarketData marketData(Config config) throws IOException {
         String           session            = config.getString("market-data.session");
         NetworkInterface multicastInterface = Configs.getNetworkInterface(config, "market-data.multicast-interface");
         InetAddress      multicastGroup     = Configs.getInetAddress(config, "market-data.multicast-group");

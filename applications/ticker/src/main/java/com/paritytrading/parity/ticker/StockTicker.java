@@ -23,7 +23,10 @@ import com.paritytrading.nassau.util.BinaryFILE;
 import com.paritytrading.nassau.util.MoldUDP64;
 import com.paritytrading.nassau.util.SoupBinTCP;
 import com.paritytrading.parity.book.Market;
+import com.paritytrading.parity.net.itch.ITCH50Parser;
 import com.paritytrading.parity.net.pmd.PMDParser;
+import com.paritytrading.parity.system.MarketData;
+import com.paritytrading.parity.system.TradingSystem;
 import com.paritytrading.parity.util.Instrument;
 import com.paritytrading.parity.util.Instruments;
 import com.typesafe.config.Config;
@@ -34,9 +37,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.nio.ByteBuffer;
+
 import org.jvirtanen.config.Configs;
 
-class StockTicker {
+public class StockTicker {
 
     public static void main(String[] args) {
         if (args.length < 1)
@@ -104,7 +109,7 @@ class StockTicker {
 
     private static void read(boolean taq, Config config, File file) throws IOException {
         Instruments instruments = Instruments.fromConfig(config, "instruments");
-
+        final String protocol = config.getString("market-data.protocol");
         MarketDataListener listener = taq ? new TAQFormat(instruments) : new DisplayFormat(instruments);
 
         Market market = new Market(listener);
@@ -112,9 +117,15 @@ class StockTicker {
         for (Instrument instrument : instruments)
             market.open(instrument.asLong());
 
-        MarketDataProcessor processor = new MarketDataProcessor(market, listener);
+        System.out.println(protocol);
+        if("itch50".equals(protocol)){
+            ItchMarketDataProcessor processor = new ItchMarketDataProcessor(TradingSystem.marketData(config));
+            BinaryFILE.read(file, new ITCH50Parser(processor));
 
-        BinaryFILE.read(file, new PMDParser(processor));
+        } else {
+            MarketDataProcessor processor = new MarketDataProcessor(market, listener);
+            BinaryFILE.read(file, new PMDParser(processor));
+        }
     }
 
     private static void usage() {
