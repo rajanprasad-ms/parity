@@ -1,3 +1,7 @@
 *.jar
 target/
 *.iml
+.idea/
+*.txt
+*.conf
+*.gz

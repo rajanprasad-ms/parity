@@ -14,4 +14,4 @@ Parity Matching Algorithm | `parity-match` | `...`
 Parity Network Protocols  | `parity-net`   | `...`
 Parity Utilities          | `parity-util`  | `...`
 
-The **Group ID** for all artifacts is `com.paritytrading.parity`.
+The **Group ID** for all artifacts is `com.microsoft.itchserver`.
