@@ -74,20 +74,24 @@ public class StockTicker {
 
     private static void listen(boolean taq, Config config) throws IOException {
         Instruments instruments = Instruments.fromConfig(config, "instruments");
+        final String protocol = config.getString("market-data.protocol");
 
-        MarketDataListener listener = taq ? new TAQFormat(instruments) : new DisplayFormat(instruments);
 
-        Market market = new Market(listener);
-
-        for (Instrument instrument : instruments)
-            market.open(instrument.asLong());
-
-        MarketDataProcessor processor = new MarketDataProcessor(market, listener);
-
-        listen(config, new PMDParser(processor));
+        if("itch50".equals(protocol)){
+            ItchMarketDataProcessor processor = new ItchMarketDataProcessor(TradingSystem.marketData(config));
+            listen(config, new ITCH50Parser(processor));
+        } else{
+            MarketDataListener listener = taq ? new TAQFormat(instruments) : new DisplayFormat(instruments);
+            Market market = new Market(listener);
+            for (Instrument instrument : instruments)
+                market.open(instrument.asLong());
+            MarketDataProcessor processor = new MarketDataProcessor(market, listener);
+            listen(config, new PMDParser(processor));
+        }
     }
 
     private static void listen(Config config, MessageListener listener) throws IOException {
+
         if (config.hasPath("market-data.multicast-interface")) {
             NetworkInterface multicastInterface = Configs.getNetworkInterface(config, "market-data.multicast-interface");
             InetAddress      multicastGroup     = Configs.getInetAddress(config, "market-data.multicast-group");
@@ -132,5 +136,4 @@ public class StockTicker {
         System.err.println("Usage: parity-ticker [-t] <configuration-file> [<input-file>]");
         System.exit(2);
     }
-
 }
