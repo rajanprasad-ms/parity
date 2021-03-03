@@ -78,7 +78,7 @@ public class StockTicker {
 
 
         if("itch50".equals(protocol)){
-            ItchMarketDataProcessor processor = new ItchMarketDataProcessor(TradingSystem.marketData(config));
+            ItchMarketDataProcessor processor = new ItchMarketDataProcessor();
             listen(config, new ITCH50Parser(processor));
         } else{
             MarketDataListener listener = taq ? new TAQFormat(instruments) : new DisplayFormat(instruments);
@@ -98,7 +98,7 @@ public class StockTicker {
             int              multicastPort      = Configs.getPort(config, "market-data.multicast-port");
             InetAddress      requestAddress     = Configs.getInetAddress(config, "market-data.request-address");
             int              requestPort        = Configs.getPort(config, "market-data.request-port");
-
+            System.out.println("Listening on " + multicastPort + " in group " + multicastGroup.getHostAddress());
             MoldUDP64.receive(multicastInterface, new InetSocketAddress(multicastGroup, multicastPort),
                     new InetSocketAddress(requestAddress, requestPort), listener);
         } else {
