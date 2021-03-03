@@ -31,9 +31,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.logging.Logger;
 
 public class StockTicker {
+
+    private static final Logger Log = Logger.getLogger(StockTicker.class.getName());
 
     public static void main(String[] args) {
         if (args.length < 1)
@@ -63,8 +67,10 @@ public class StockTicker {
         final String protocol = config.getString("market-data.protocol");
         System.out.println(protocol);
         if("itch50".equals(protocol)){
+            Log.info("Reading itch dump started at " + LocalDateTime.now().toString());
             ItchMarketDataProcessor processor = new ItchMarketDataProcessor(marketData(config));
             BinaryFILE.read(file, new ITCH50Parser(processor));
+            Log.info("Reading itch dump finished at " + LocalDateTime.now().toString());
 
         }
     }
