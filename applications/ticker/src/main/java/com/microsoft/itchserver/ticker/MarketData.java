@@ -17,10 +17,7 @@ package com.microsoft.itchserver.ticker;
 
 import static org.jvirtanen.util.Applications.*;
 
-import com.paritytrading.nassau.moldudp64.MoldUDP64DefaultMessageStore;
-import com.paritytrading.nassau.moldudp64.MoldUDP64DownstreamPacket;
-import com.paritytrading.nassau.moldudp64.MoldUDP64RequestServer;
-import com.paritytrading.nassau.moldudp64.MoldUDP64Server;
+import com.paritytrading.nassau.moldudp64.*;
 import com.microsoft.itchserver.net.itch.ITCH50;
 
 import java.io.IOException;
@@ -30,8 +27,11 @@ import java.net.StandardProtocolFamily;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.util.logging.Logger;
 
 public class MarketData {
+
+    private static final Logger Log = Logger.getLogger(MarketData.class.getName());
 
     private final MoldUDP64Server transport;
 
@@ -39,7 +39,7 @@ public class MarketData {
 
     private final MoldUDP64DefaultMessageStore messages;
 
-    private final MoldUDP64DownstreamPacket packet;
+    private MoldUDP64DownstreamPacket packet;
 
     private final ByteBuffer buffer;
 
@@ -99,18 +99,30 @@ public class MarketData {
         message.put(buffer);
         buffer.flip();
 
+        if(packet.remaining() < buffer.remaining()){
+            Log.finer("Messages packed : " + packet.messageCount());
+            try{
+                transport.send(packet);
+                packet.payload().flip();
+
+                // to fix OOM.
+                //                messages.put(packet);
+            } catch (IOException e) {
+                fatal(e);
+            }
+            packet = new MoldUDP64DownstreamPacket();
+        }
+
         try {
             packet.put(buffer);
-
-            transport.send(packet);
-
-            packet.payload().flip();
-
-            messages.put(packet);
-
-            packet.clear();
-        } catch (IOException e) {
-            fatal(e);
+        } catch (final MoldUDP64Exception ex) {
+//            Log.throwing(this.getClass().getName(), "send", ex);
+//            Log.info( "messages in last packet = " + packet.messageCount());
+//            Log.info( "exception = " + ex.getMessage());
+//            ex.printStackTrace();
+            Log.info("new packet remaining = " + packet.remaining()
+                    + " ... buffer remaining = " + buffer.remaining());
+            fatal(ex);
         }
     }
 
